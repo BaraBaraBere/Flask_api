@@ -119,3 +119,31 @@ def create_post():
         )
     except Exception as err:
         return str(err), 404
+
+
+@app.get("/posts/<int:post_id>")
+def get_post(post_id):
+    try:
+        data = usage_database.get_post_by_post_id(post_id)
+        if not data:
+            return Response(
+                json.dumps({"message": "User is not found"}),
+                HTTPStatus.NOT_FOUND,
+                mimetype="aplication/json",
+            )
+        data["reactions"] = usage_database.get_reactions_by_post_id(data["id"])
+        request = Response(
+            json.dumps(data),
+            HTTPStatus.OK,
+            mimetype="aplication/json",
+        )
+        return request
+
+    except KeyError:
+        return Response(
+            json.dumps({"message": "Icorrect data"}),
+            HTTPStatus.BAD_REQUEST,
+            mimetype="aplication/json",
+        )
+    except Exception as err:
+        return str(err), 404

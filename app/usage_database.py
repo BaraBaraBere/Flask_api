@@ -2,6 +2,26 @@ import mysql.connector
 from app import config
 
 
+def get_post_by_post_id(post_id):
+    try:
+        conn = mysql.connector.connect(
+            host=config.host,
+            user=config.user,
+            password=config.password,
+            database=config.database,
+        )
+
+        cursor = conn.cursor(dictionary=True)
+
+        selection_query = "SELECT * FROM wall WHERE id = %s"
+        cursor.execute(selection_query, (post_id,))
+        data = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        return data
+    except mysql.connector.Error:
+        return None
+
 def get_reactions_by_post_id(post_id):
     try:
         conn = mysql.connector.connect(
