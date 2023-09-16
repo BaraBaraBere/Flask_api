@@ -36,7 +36,6 @@ create_table_wall = """
 create_table_of_reactions = """
     CREATE TABLE IF NOT EXISTS reactions(
         id INT AUTO_INCREMENT PRIMARY KEY,
-        reacted_user_id INT,
         post_id INT,
         reaction TEXT
         )

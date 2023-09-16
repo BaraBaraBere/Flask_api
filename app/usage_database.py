@@ -2,6 +2,54 @@ import mysql.connector
 from app import config
 
 
+def check_post_exists(post_id):
+    try:
+        conn = mysql.connector.connect(
+            host=config.host,
+            user=config.user,
+            password=config.password,
+            database=config.database,
+        )
+
+        cursor = conn.cursor(dictionary=True)
+
+        selection_query = "SELECT * FROM wall WHERE id = %s"
+        cursor.execute(selection_query, (post_id,))
+        data = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        return True if data else False
+    except mysql.connector.Error:
+        return None
+
+
+def add_reaction_to_post_by_post_id(post_id, reaction):
+    try:
+        # Подключение к базе данных
+        conn = mysql.connector.connect(
+            host=config.host,
+            user=config.user,
+            password=config.password,
+            database=config.database,
+        )
+        # Создание курсора
+        cursor = conn.cursor(dictionary=True)
+
+        # Добавление шаблона для данных
+        insert_query = "INSERT INTO reactions (post_id, reaction) VALUES (%s, %s)"
+
+        # Добавление в базу данных
+        cursor.execute(insert_query, (post_id, reaction))
+        conn.commit()
+        # Закрытие базы данных
+        cursor.close()
+        conn.close()
+        return True
+    # Обработка случая если возникла какая-то ошибка
+    except mysql.connector.Error:
+        return None
+
+
 def get_post_by_post_id(post_id):
     try:
         conn = mysql.connector.connect(
@@ -21,6 +69,7 @@ def get_post_by_post_id(post_id):
         return data
     except mysql.connector.Error:
         return None
+
 
 def get_reactions_by_post_id(post_id):
     try:
@@ -42,7 +91,6 @@ def get_reactions_by_post_id(post_id):
     # Обработка случая если возникла какая-то ошибка
     except mysql.connector.Error:
         return None
-
 
 
 def get_post_by_info(author_id, text):
@@ -67,7 +115,6 @@ def get_post_by_info(author_id, text):
     # Обработка случая если возникла какая-то ошибка
     except mysql.connector.Error:
         return None
-
 
 
 def add_post(author_id, text):
@@ -124,7 +171,6 @@ def get_user_by_id(user_id):
         return data
     except mysql.connector.Error:
         return None
-
 
 
 def get_posts_id_by_user_id(user_id):
@@ -208,5 +254,3 @@ def add_user(first_name, last_name, email, total_reactions=0):
     # Обработка случая если возникла какая-то ошибка
     except mysql.connector.Error:
         return None
-
-

@@ -139,6 +139,36 @@ def get_post(post_id):
         )
         return request
 
+
+    except Exception as err:
+        return str(err), 404
+
+@app.post("/posts/<int:post_id>/reaction")
+def add_reaction(post_id):
+    try:
+        data = request.get_json()
+        reaction = data["reaction"]
+
+        if usage_database.check_post_exists(post_id):
+            if usage_database.add_reaction_to_post_by_post_id(post_id, reaction):
+                return Response(
+                    json.dumps({"message": "Successfull"}),
+                    HTTPStatus.CREATED,
+                    mimetype="aplication/json",
+                )
+            else:
+                return Response(
+                    json.dumps({"message": "Fail to connect database"}),
+                    HTTPStatus.INTERNAL_SERVER_ERROR,
+                    mimetype="aplication/json",
+                )
+        return Response(
+            json.dumps({"message": "No such post exists"}),
+            HTTPStatus.NOT_FOUND,
+            mimetype="aplication/json",
+        )
+
+
     except KeyError:
         return Response(
             json.dumps({"message": "Icorrect data"}),
@@ -147,3 +177,4 @@ def get_post(post_id):
         )
     except Exception as err:
         return str(err), 404
+
