@@ -2,6 +2,48 @@ import mysql.connector
 from app import config
 
 
+def get_author_id_by_post_id(post_id):
+    try:
+        conn = mysql.connector.connect(
+            host=config.host,
+            user=config.user,
+            password=config.password,
+            database=config.database,
+        )
+
+        cursor = conn.cursor()
+
+        update_query = "SELECT author_id FROM wall WHERE id = %s"
+        cursor.execute(update_query, (post_id,))
+        author_id = [row[0] for row in cursor.fetchall()]
+        cursor.close()
+        conn.close()
+        return author_id[0]
+    except mysql.connector.Error:
+        return None
+
+
+def add_reacted_stat_to_author(author_id):
+    try:
+        conn = mysql.connector.connect(
+            host=config.host,
+            user=config.user,
+            password=config.password,
+            database=config.database,
+        )
+
+        cursor = conn.cursor()
+
+        update_query = "UPDATE users SET total_reactions = total_reactions + 1 WHERE id = %s"
+        cursor.execute(update_query, (author_id,))
+        conn.commit()
+
+        cursor.close()
+        conn.close()
+        return True
+    except mysql.connector.Error:
+        return None
+
 def check_post_exists(post_id):
     try:
         conn = mysql.connector.connect(
@@ -44,7 +86,11 @@ def add_reaction_to_post_by_post_id(post_id, reaction):
         # Закрытие базы данных
         cursor.close()
         conn.close()
-        return True
+
+        user_id = get_author_id_by_post_id(post_id)
+
+
+        return add_reacted_stat_to_author(user_id)
     # Обработка случая если возникла какая-то ошибка
     except mysql.connector.Error:
         return None

@@ -127,7 +127,7 @@ def get_post(post_id):
         data = usage_database.get_post_by_post_id(post_id)
         if not data:
             return Response(
-                json.dumps({"message": "User is not found"}),
+                json.dumps({"message": "Post is not found"}),
                 HTTPStatus.NOT_FOUND,
                 mimetype="aplication/json",
             )
