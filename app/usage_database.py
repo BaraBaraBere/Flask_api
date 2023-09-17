@@ -2,6 +2,32 @@ import mysql.connector
 from app import config
 
 
+def get_sorted_user_posts_by_user_id(user_id, type_of_sort):
+    try:
+        conn = mysql.connector.connect(
+            host=config.host,
+            user=config.user,
+            password=config.password,
+            database=config.database,
+        )
+
+        cursor = conn.cursor(dictionary=True)
+
+        update_query = f"SELECT id, author_id, text FROM wall WHERE author_id = %s ORDER BY reactions_to_post {type_of_sort}"
+        cursor.execute(update_query, (user_id,))
+
+        data = cursor.fetchall()
+
+        for row in data:
+            row["reactions"] = get_reactions_by_post_id(row["id"])
+
+        cursor.close()
+        conn.close()
+        return data
+    except mysql.connector.Error:
+        return None
+
+
 def get_author_id_by_post_id(post_id):
     try:
         conn = mysql.connector.connect(
@@ -23,7 +49,7 @@ def get_author_id_by_post_id(post_id):
         return None
 
 
-def add_reacted_stat_to_author(author_id):
+def add_reacted_stat_to_author_and_post(author_id, post_id):
     try:
         conn = mysql.connector.connect(
             host=config.host,
@@ -34,8 +60,15 @@ def add_reacted_stat_to_author(author_id):
 
         cursor = conn.cursor()
 
-        update_query = "UPDATE users SET total_reactions = total_reactions + 1 WHERE id = %s"
-        cursor.execute(update_query, (author_id,))
+        update_user_statistics = (
+            "UPDATE users SET total_reactions = total_reactions + 1 WHERE id = %s"
+        )
+        update_post_statistics = (
+            "UPDATE wall SET reactions_to_post = reactions_to_post + 1 WHERE id = %s"
+        )
+
+        cursor.execute(update_user_statistics, (author_id,))
+        cursor.execute(update_post_statistics, (post_id,))
         conn.commit()
 
         cursor.close()
@@ -43,6 +76,7 @@ def add_reacted_stat_to_author(author_id):
         return True
     except mysql.connector.Error:
         return None
+
 
 def check_post_exists(post_id):
     try:
@@ -89,8 +123,7 @@ def add_reaction_to_post_by_post_id(post_id, reaction):
 
         user_id = get_author_id_by_post_id(post_id)
 
-
-        return add_reacted_stat_to_author(user_id)
+        return add_reacted_stat_to_author_and_post(user_id, post_id)
     # Обработка случая если возникла какая-то ошибка
     except mysql.connector.Error:
         return None
@@ -107,7 +140,7 @@ def get_post_by_post_id(post_id):
 
         cursor = conn.cursor(dictionary=True)
 
-        selection_query = "SELECT * FROM wall WHERE id = %s"
+        selection_query = "SELECT id, author_id, text FROM wall WHERE id = %s"
         cursor.execute(selection_query, (post_id,))
         data = cursor.fetchone()
         cursor.close()
@@ -151,7 +184,7 @@ def get_post_by_info(author_id, text):
         # Создание курсора
         cursor = conn.cursor(dictionary=True)
         # Поиск пользователя в системе
-        select_data = "SELECT * FROM wall WHERE author_id = %s AND text = %s ORDER BY id DESC LIMIT 1"
+        select_data = "SELECT id, author_id, text FROM wall WHERE author_id = %s AND text = %s ORDER BY id DESC LIMIT 1"
         cursor.execute(select_data, (author_id, text))
         data = cursor.fetchone()
         # Закрытие базы данных
@@ -163,7 +196,7 @@ def get_post_by_info(author_id, text):
         return None
 
 
-def add_post(author_id, text):
+def add_post(author_id, text, reactions_to_post=0):
     try:
         # Подключение к базе данных
         conn = mysql.connector.connect(
@@ -176,10 +209,12 @@ def add_post(author_id, text):
         cursor = conn.cursor(dictionary=True)
 
         # Добавление шаблона для данных
-        insert_query = "INSERT INTO wall (author_id, text) VALUES (%s, %s)"
+        insert_query = (
+            "INSERT INTO wall (author_id, text, reactions_to_post) VALUES (%s, %s, %s)"
+        )
 
         # Добавление в базу данных
-        cursor.execute(insert_query, (author_id, text))
+        cursor.execute(insert_query, (author_id, text, reactions_to_post))
         conn.commit()
 
         # Сбор данных о пользователе в словарь

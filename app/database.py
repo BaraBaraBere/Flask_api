@@ -1,8 +1,11 @@
 import mysql.connector
 
 # Подключение к пользователю
-conn = mysql.connector.connect(host="localhost", user="root", password="A12345678a")
-
+conn = mysql.connector.connect(
+    host="localhost",
+    user="root",
+    password="A12345678a",
+)
 # Создание курсора
 cursor = conn.cursor()
 
@@ -28,7 +31,8 @@ create_table_wall = """
         CREATE TABLE IF NOT EXISTS wall(
             id INT AUTO_INCREMENT PRIMARY KEY,
             author_id INT,
-            text TEXT
+            text TEXT,
+            reactions_to_post INT
         )
         """
 

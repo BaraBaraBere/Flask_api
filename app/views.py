@@ -132,16 +132,16 @@ def get_post(post_id):
                 mimetype="aplication/json",
             )
         data["reactions"] = usage_database.get_reactions_by_post_id(data["id"])
-        request = Response(
+        responce = Response(
             json.dumps(data),
             HTTPStatus.OK,
             mimetype="aplication/json",
         )
-        return request
-
+        return responce
 
     except Exception as err:
         return str(err), 404
+
 
 @app.post("/posts/<int:post_id>/reaction")
 def add_reaction(post_id):
@@ -168,7 +168,6 @@ def add_reaction(post_id):
             mimetype="aplication/json",
         )
 
-
     except KeyError:
         return Response(
             json.dumps({"message": "Icorrect data"}),
@@ -178,3 +177,35 @@ def add_reaction(post_id):
     except Exception as err:
         return str(err), 404
 
+
+@app.get("/users/<int:user_id>/posts")
+def get_sorted_user_posts(user_id):
+    try:
+        data = request.get_json()
+        type_of_sort = data["sort"]
+
+        posts_data = usage_database.get_sorted_user_posts_by_user_id(
+            user_id, type_of_sort.upper()
+        )
+        if not posts_data:
+            return Response(
+                json.dumps({"message": "Posts is not found"}),
+                HTTPStatus.NOT_FOUND,
+                mimetype="aplication/json",
+            )
+
+        responce = Response(
+            json.dumps({"posts": [posts_data]}),
+            HTTPStatus.OK,
+            mimetype="aplication/json",
+        )
+        return responce
+
+    except KeyError:
+        return Response(
+            json.dumps({"message": "Icorrect data"}),
+            HTTPStatus.BAD_REQUEST,
+            mimetype="aplication/json",
+        )
+    except Exception as err:
+        return str(err), 404
