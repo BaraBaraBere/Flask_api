@@ -1,9 +1,10 @@
 from app import app
-from flask import request, jsonify, Response
+from flask import request, jsonify, Response, send_file
 import json
 from http import HTTPStatus
 from app import usage_database
 from validate_email import validate_email
+from app import generate_reactions_graph
 
 
 @app.route("/")
@@ -43,8 +44,8 @@ def user_create():
             )
         # Обработка случая если польователь уже зарегистрировн
         elif (
-            "message" in data_user.keys()
-            and data_user["message"] == "The user has already been created"
+                "message" in data_user.keys()
+                and data_user["message"] == "The user has already been created"
         ):
             return Response(
                 json.dumps(data_user),
@@ -201,6 +202,48 @@ def get_sorted_user_posts(user_id):
         )
         return responce
 
+    except KeyError:
+        return Response(
+            json.dumps({"message": "Icorrect data"}),
+            HTTPStatus.BAD_REQUEST,
+            mimetype="aplication/json",
+        )
+    except Exception as err:
+        return str(err), 404
+
+
+@app.get("/users/leaderboard")
+def get_leaderboard():
+    try:
+        data = request.get_json()
+        type = data["type"]
+        if type == "list":
+            sort = data["sort"]
+            users_data = usage_database.get_sorted_users(sort.upper())
+            if not users_data:
+                return Response(
+                    json.dumps({"message": "Users is not found"}),
+                    HTTPStatus.NOT_FOUND,
+                    mimetype="aplication/json",
+                )
+            responce = Response(
+                json.dumps({"users": [users_data]}),
+                HTTPStatus.OK,
+                mimetype="aplication/json",
+            )
+            return responce
+        elif type == "graph":
+
+            file_name = generate_reactions_graph.generate_reactions_graph()
+            if file_name:
+                return send_file(file_name, mimetype='image/png')
+            else:
+                return Response(
+                    json.dumps({"message": "Users is not found"}),
+                    HTTPStatus.NOT_FOUND,
+                    mimetype="aplication/json",
+                )
+        raise KeyError
     except KeyError:
         return Response(
             json.dumps({"message": "Icorrect data"}),

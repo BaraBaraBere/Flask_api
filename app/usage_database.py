@@ -2,6 +2,86 @@ import mysql.connector
 from app import config
 
 
+def get_users_reactions():
+    try:
+        conn = mysql.connector.connect(
+            host=config.host,
+            user=config.user,
+            password=config.password,
+            database=config.database,
+        )
+
+        # Создаем объект cursor для выполнения SQL-запросов
+        cursor = conn.cursor()
+
+        # Выполняем SQL-запрос для извлечения имени и фамилии и объединения их
+        query = "SELECT total_reactions FROM users"
+
+        # Выполняем запрос
+        cursor.execute(query)
+
+        # Получаем результаты
+        data = [row[0] for row in cursor.fetchall()]
+
+        # Закрываем соединение
+        cursor.close()
+        conn.close()
+        return data
+    except mysql.connector.Error:
+        return None
+
+
+def get_users_name():
+    try:
+        conn = mysql.connector.connect(
+            host=config.host,
+            user=config.user,
+            password=config.password,
+            database=config.database,
+        )
+
+        # Создаем объект cursor для выполнения SQL-запросов
+        cursor = conn.cursor()
+
+        # Выполняем SQL-запрос для извлечения имени и фамилии и объединения их
+        query = "SELECT CONCAT(first_name, ' ', last_name) AS full_name FROM users"
+
+        # Выполняем запрос
+        cursor.execute(query)
+
+        # Получаем результаты
+        data = [row[0] for row in cursor.fetchall()]
+
+        # Закрываем соединение
+        cursor.close()
+        conn.close()
+        return data
+    except mysql.connector.Error:
+        return None
+
+def get_sorted_users(type_of_sort):
+    try:
+        conn = mysql.connector.connect(
+            host=config.host,
+            user=config.user,
+            password=config.password,
+            database=config.database,
+        )
+
+        cursor = conn.cursor(dictionary=True)
+
+        update_query = f"SELECT * FROM users ORDER BY total_reactions {type_of_sort}"
+        cursor.execute(update_query)
+
+        data = cursor.fetchall()
+
+        cursor.close()
+        conn.close()
+        return data
+    except mysql.connector.Error:
+        return None
+
+
 def get_sorted_user_posts_by_user_id(user_id, type_of_sort):
     try:
         conn = mysql.connector.connect(
