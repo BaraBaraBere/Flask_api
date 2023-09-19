@@ -50,5 +50,6 @@ cursor.execute(create_table_wall)
 cursor.execute(create_table_user)
 cursor.execute(create_table_of_reactions)
 
+# Закрытие соединения
 cursor.close()
 conn.close()

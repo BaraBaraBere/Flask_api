@@ -1,3 +1,4 @@
+# Данные для подключения
 host = "localhost"
 user = "root"
 password = "A12345678a"
